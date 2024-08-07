@@ -27,7 +27,7 @@ const unzip = async (inputPath, tempDir) => {
             targetPath: tempDir,
             filenameTransform: filename => path.basename(filename)
         })
-        await extractor.extract({})
+        extractor.extract({})
     } else {
         // 解压缩压缩包到临时文件夹
         const zip = new AdmZip(inputPath)
@@ -62,8 +62,9 @@ const processZipFile = async (inputPath, outputPath, completedPath, maxWidth) =>
             // 裁剪图片
             const buffer = await sharp(imagePath).resize(maxWidth, null, { fit: 'inside' }).webp({ quality: 89 }).toBuffer()
             // await fs.promises.writeFile(imagePath, buffer);
-            outputZip.addFile(imageFile, buffer, 'some thing')
-            console.time('time', `已裁剪 ${imageFile}`);
+            const filename = imageFile.replace(path.extname(imageFile), '.webp')
+            outputZip.addFile(filename, buffer)
+            console.timeLog('time', `   ${imageFile}`);
         } catch (error) {
             console.error(`裁剪 ${imageFile} 失败: ${error}`)
         }
