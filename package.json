@@ -1,0 +1,16 @@
+{
+  "name": "zip-image-processor",
+  "version": "1.0.0",
+  "description": "A Node.js application to process images in ZIP archives.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "adm-zip": "^0.5.15",
+    "node-unrar-js": "^2.0.2",
+    "sharp": "^0.33.4"
+  }
+}
