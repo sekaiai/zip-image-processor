@@ -50,7 +50,7 @@ const processZipFile = async (inputPath, outputPath, completedPath, maxWidth) =>
     mkdir(tempDir)
 
     console.log('start', path.basename(inputPath))
-    console.time('end')
+    console.time('time')
     await unzip(inputPath, tempDir)
 
     // 处理图片
@@ -63,7 +63,7 @@ const processZipFile = async (inputPath, outputPath, completedPath, maxWidth) =>
             const buffer = await sharp(imagePath).resize(maxWidth, null, { fit: 'inside' }).webp({ quality: 89 }).toBuffer()
             // await fs.promises.writeFile(imagePath, buffer);
             outputZip.addFile(imageFile, buffer, 'some thing')
-            // console.log(`已裁剪 ${imageFile} 至最大宽度 ${maxWidth}`);
+            console.time('time', `已裁剪 ${imageFile}`);
         } catch (error) {
             console.error(`裁剪 ${imageFile} 失败: ${error}`)
         }
@@ -78,7 +78,7 @@ const processZipFile = async (inputPath, outputPath, completedPath, maxWidth) =>
     // 移动已完成文件
     fs.renameSync(inputPath, completedPath)
 
-    console.timeEnd('end')
+    console.timeEnd('time')
 }
 
 // 主函数
