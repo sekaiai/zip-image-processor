@@ -20,19 +20,24 @@ const getInput = async (question, defaultValue) => {
 
 // 解压文件到指定目录，处理不同类型的压缩文件
 const unzip = async (inputPath, tempDir) => {
-    // 检查文件类型
-    if (inputPath.endsWith('.rar')) {
-        const extractor = await unrar.createExtractorFromFile({
-            filepath: inputPath,
-            targetPath: tempDir,
-            filenameTransform: filename => path.basename(filename)
-        })
-        extractor.extract({})
-    } else {
-        // 解压缩压缩包到临时文件夹
-        const zip = new AdmZip(inputPath)
-        zip.extractAllTo(tempDir, true)
+    try {
+        // 检查文件类型
+        if (inputPath.endsWith('.rar')) {
+            const extractor = await unrar.createExtractorFromFile({
+                filepath: inputPath,
+                targetPath: tempDir,
+                filenameTransform: filename => path.basename(filename)
+            })
+            extractor.extract({})
+        } else {
+            // 解压缩压缩包到临时文件夹
+            const zip = new AdmZip(inputPath)
+            zip.extractAllTo(tempDir, true)
+        }
+    } catch (err) {
+        console.log('ERROR:', inputPath, err.message);
     }
+
 }
 
 // 创建目录，如果不存在
@@ -46,7 +51,7 @@ const mkdir = dir => {
 const processZipFile = async (inputPath, outputPath, completedPath, maxWidth) => {
     // 创建临时文件夹
     const outputZip = new AdmZip()
-    const tempDir = path.join(__dirname, 'temp')
+    const tempDir = path.join(__dirname, 'temp', path.basename(inputPath))
     mkdir(tempDir)
 
     console.log('start', path.basename(inputPath))
@@ -60,7 +65,7 @@ const processZipFile = async (inputPath, outputPath, completedPath, maxWidth) =>
         const imagePath = path.join(tempDir, imageFile)
         try {
             // 裁剪图片
-            const buffer = await sharp(imagePath).resize(maxWidth, null, { fit: 'inside' }).webp({ quality: 89 }).toBuffer()
+            const buffer = await sharp(imagePath).resize(maxWidth, null, { fit: 'inside', withoutEnlargement: true }).webp({ effort: 2, force: true, }).toBuffer()
             // await fs.promises.writeFile(imagePath, buffer);
             const filename = imageFile.replace(path.extname(imageFile), '.webp')
             outputZip.addFile(filename, buffer)
@@ -87,7 +92,7 @@ const main = async () => {
     const inputDir = await getInput('输入文件夹路径：', './input')
     const outputDir = await getInput('输出文件夹路径：', './output')
     const completedDir = await getInput('完成文件夹路径：', './completed')
-    const maxWidth = parseInt(await getInput('请输入最大宽度：', '1500'))
+    const maxWidth = parseInt(await getInput('请输入最大宽度：', '2000'))
 
     // 获取输入文件夹中的所有压缩包
     const zipFiles = fs.readdirSync(inputDir).filter(file => ['.zip', '.rar'].includes(path.extname(file).toLowerCase()))
