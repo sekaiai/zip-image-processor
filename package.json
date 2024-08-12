@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "adm-zip": "^0.5.15",
+    "async": "^3.2.5",
     "node-unrar-js": "^2.0.2",
     "piscina": "^4.6.1",
     "pretty-hrtime": "^1.0.3",

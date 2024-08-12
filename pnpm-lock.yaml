@@ -8,6 +8,9 @@ dependencies:
   adm-zip:
     specifier: ^0.5.15
     version: 0.5.15
+  async:
+    specifier: ^3.2.5
+    version: 3.2.5
   node-unrar-js:
     specifier: ^2.0.2
     version: 2.0.2
@@ -234,6 +237,10 @@ packages:
   /adm-zip@0.5.15:
     resolution: {integrity: sha512-jYPWSeOA8EFoZnucrKCNihqBjoEGQSU4HKgHYQgKNEQ0pQF9a/DYuo/+fAxY76k4qe75LUlLWpAM1QWcBMTOKw==}
     engines: {node: '>=12.0'}
+    dev: false
+
+  /async@3.2.5:
+    resolution: {integrity: sha512-baNZyqaaLhyLVKm/DlvdW051MSgO6b8eVfIezl9E5PqWxFgzLm/wQntEW4zOytVburDEr0JlALEpdOFwvErLsg==}
     dev: false
 
   /color-convert@2.0.1:
