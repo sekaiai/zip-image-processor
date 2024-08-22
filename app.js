@@ -113,8 +113,7 @@ async function createWorker(value) {
 
 // 主函数
 const main = async () => {
-    const { inputDir, outputDir, completedDir, maxWidth, quality, zipThreads, sharpThreads, outputFormat } =
-        await getParams()
+    const { inputDir, outputDir, completedDir, maxWidth, quality, zipThreads, sharpThreads, outputFormat } = await getParams()
 
     // 获取输入文件夹中的所有压缩包
     const zipFiles = fs.readdirSync(inputDir).filter(file => ['.zip'].includes(path.extname(file).toLowerCase()))
