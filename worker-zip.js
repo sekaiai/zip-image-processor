@@ -75,12 +75,12 @@ const processZipFile = async ({ inputPath, outputPath, completedPath, maxWidth, 
 
   // 所有文件添加完成后，写入压缩包
   if (imageFiles.length) {
-    zip.addLocalFolder(tempDir);
+    zip.addLocalFolder(path.join(tempDir, 'tmp'));
     await zip.writeZipPromise(outputPath);
   }
 
   // 删除临时文件夹
-  // fs.rmSync(tempDir, { recursive: true }) // 使用 fs.rmSync 代替 fs.rmdirSync
+  fs.rmSync(tempDir, { recursive: true }) // 使用 fs.rmSync 代替 fs.rmdirSync
 
   // 移动已完成文件
   // fs.renameSync(inputPath, completedPath)
