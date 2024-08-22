@@ -22,13 +22,13 @@ const processImage = async (imagePath, imageTmpPath, { outputFormat = 'webp', qu
 
     switch (format) {
       case 'jpg':
-        buffer = await transformer.jpeg({ quality }).toBuffer(imageTmpPath);
+        buffer = await transformer.jpeg({ quality }).toFile(imageTmpPath);
         break;
       case 'png':
-        buffer = await transformer.png({ quality }).toBuffer(imageTmpPath);
+        buffer = await transformer.png({ quality }).toFile(imageTmpPath);
         break;
       default:
-        buffer = await transformer.webp({ quality }).toBuffer(imageTmpPath);
+        buffer = await transformer.webp({ quality }).toFile(imageTmpPath);
     }
 
     // return { buffer, filename };
