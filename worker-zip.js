@@ -59,25 +59,25 @@ const processZipFile = async ({ inputPath, outputPath, completedPath, maxWidth, 
   });
 
 
-  // 等待所有任务完成
-  const result = await Promise.all(tasks);
+  // // 等待所有任务完成
+  // const result = await Promise.all(tasks);
 
-  result.forEach(({ buffer, filename }) => buffer && zip.addFile(filename, buffer));
+  // result.forEach(({ buffer, filename }) => buffer && zip.addFile(filename, buffer));
+
+  // // 所有文件添加完成后，写入压缩包
+  // if (imageFiles.length) {
+  //   zip.writeZip(outputPath)
+  // }
+
+
+  // 等待所有任务完成
+  await Promise.all(tasks);
 
   // 所有文件添加完成后，写入压缩包
   if (imageFiles.length) {
-    zip.writeZip(outputPath)
+    zip.addLocalFolder(tempDir);
+    await zip.writeZipPromise(outputPath);
   }
-
-
-  // 等待所有任务完成
-  // await Promise.all(tasks);
-
-  // 所有文件添加完成后，写入压缩包
-  // if (imageFiles.length) {
-  //   zip.addLocalFolder(tempDir);
-  //   await zip.writeZipPromise(outputPath);
-  // }
 
   // 删除临时文件夹
   // fs.rmSync(tempDir, { recursive: true }) // 使用 fs.rmSync 代替 fs.rmdirSync
