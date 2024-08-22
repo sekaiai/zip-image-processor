@@ -1,3 +1,4 @@
+const fs = require('fs')
 const path = require('path')
 const AdmZip = require('adm-zip')
 const prettyHrtime = require('pretty-hrtime')
@@ -46,17 +47,6 @@ const processZipFile = async ({
   }
 }
 
-async function compressImage() {
-  try {
-    await processZipFile(workerData)
-    parentPort.postMessage('完成!')
-  } catch (error) {
-    parentPort.postMessage('失败:', error)
-  }
-}
-
-compressImage()
-
 async function createWorker(entry) {
   return new Promise(resolve => {
     if (!imageFormats.includes(path.extname(entry.entryName).toLowerCase())) {
@@ -80,3 +70,10 @@ async function createWorker(entry) {
     // });
   })
 }
+
+async function compressImage() {
+  await processZipFile(workerData)
+  parentPort.postMessage()
+}
+
+compressImage()
