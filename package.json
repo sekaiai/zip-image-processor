@@ -2,6 +2,7 @@
   "name": "zip-image-processor",
   "version": "1.0.0",
   "description": "A Node.js application to process images in ZIP archives.",
+  "type": "module",
   "main": "app.js",
   "scripts": {
     "start": "node --max-old-space-size=30720 app.js"

@@ -1,15 +1,21 @@
-const fs = require('fs')
-const path = require('path')
-const AdmZip = require('adm-zip')
-const prettyHrtime = require('pretty-hrtime')
-const { parentPort, workerData } = require('worker_threads')
-const async = require('async')
-const { Worker } = require('worker_threads')
+import path from 'path'
+import AdmZip from 'adm-zip'
+import prettyHrtime from 'pretty-hrtime'
+import { Worker, parentPort, workerData } from 'worker_threads'
+import async from 'async'
 
 const imageFormats = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp', '.svg']
 
 // 处理压缩包
-const processZipFile = async ({ inputPath, outputPath, completedPath, maxWidth, quality, outputFormat, sharpThreads }) => {
+const processZipFile = async ({
+  inputPath,
+  outputPath,
+  completedPath,
+  maxWidth,
+  quality,
+  outputFormat,
+  sharpThreads
+}) => {
   try {
     // 创建临时文件夹
     const zip = new AdmZip(inputPath)

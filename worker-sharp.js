@@ -1,5 +1,6 @@
-const path = require('path')
-const sharp = require('sharp')
+import path from 'path'
+import sharp from 'sharp'
+import { parentPort, workerData } from 'worker_threads'
 
 sharp.cache(false)
 
@@ -29,10 +30,7 @@ const processImage = async (file, { filename, outputFormat = 'webp', quality, ma
   }
 
   return { buffer, filename: saveName }
-
 }
-
-const { parentPort, workerData } = require('worker_threads')
 
 async function compressImage() {
   try {
