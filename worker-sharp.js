@@ -38,9 +38,9 @@ async function compressImage() {
   try {
     const data = await processImage(workerData.file, workerData.options)
     parentPort.postMessage(data)
-  } catch (error) {
-    console.log('sharp compressImage error', error.message)
-    parentPort.postMessage()
+  } catch (err) {
+    console.log('sharp compressImage error', err.message)
+    parentPort.postMessage(err.message)
   }
 }
 

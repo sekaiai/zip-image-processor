@@ -9,15 +9,7 @@ const { Worker } = require('worker_threads')
 const imageFormats = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp', '.svg']
 
 // 处理压缩包
-const processZipFile = async ({
-  inputPath,
-  outputPath,
-  completedPath,
-  maxWidth,
-  quality,
-  outputFormat,
-  sharpThreads
-}) => {
+const processZipFile = async ({ inputPath, outputPath, completedPath, maxWidth, quality, outputFormat, sharpThreads }) => {
   try {
     // 创建临时文件夹
     const zip = new AdmZip(inputPath)
@@ -37,15 +29,22 @@ const processZipFile = async ({
     }
 
     // 移动已完成文件
-    fs.renameSync(inputPath, completedPath)
+    // fs.renameSync(inputPath, completedPath)
 
     const elapsed = prettyHrtime(process.hrtime(timeStart))
     const arr = [...elapsed.replace(/\s+/, '').split(''), ...Array(20).fill(' ')].slice(0, 9).join('')
     console.log(`${arr}${basename}`)
   } catch (error) {
-    console.log('error', error)
+    console.log('Error:', error.message, inputPath)
   }
 }
+
+async function compressImage() {
+  await processZipFile(workerData)
+  parentPort.postMessage('完成!')
+}
+
+compressImage()
 
 async function createWorker(entry) {
   return new Promise(resolve => {
@@ -70,10 +69,3 @@ async function createWorker(entry) {
     // });
   })
 }
-
-async function compressImage() {
-  await processZipFile(workerData)
-  parentPort.postMessage()
-}
-
-compressImage()
