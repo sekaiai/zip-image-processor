@@ -117,7 +117,7 @@ const main = async () => {
         await getParams()
 
     // 获取输入文件夹中的所有压缩包
-    const zipFiles = fs.readdirSync(inputDir).filter(file => ['.zip', '.rar'].includes(path.extname(file).toLowerCase()))
+    const zipFiles = fs.readdirSync(inputDir).filter(file => ['.zip'].includes(path.extname(file).toLowerCase()))
 
     console.log(`\n执行中，共 ${zipFiles.length} 文件... \n`)
     // 创建导出文件夹
