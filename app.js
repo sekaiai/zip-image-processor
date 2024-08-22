@@ -2,42 +2,108 @@ const fs = require('fs')
 const path = require('path')
 const { mkdir } = require('./utils')
 const Piscina = require('piscina');
+const { prompt } = require('enquirer');
 
-const readline = require('readline').createInterface({
-    input: process.stdin,
-    output: process.stdout
-})
 
-// 获取用户输入，并处理空输入的情况
-const getInput = async (question, defaultValue) => {
-    return new Promise(resolve => {
-        readline.question(question, answer => {
-            resolve(answer.trim() || defaultValue)
-        })
-    })
+const getParams = async () => {
+
+    const maxThreads = require('os').cpus().length;
+    const defaultThreads = Math.ceil(maxThreads * 0.9);
+
+    const responses = await prompt([
+        {
+            type: 'input',
+            name: 'inputDir',
+            message: 'Enter the input folder path',
+            initial: './input',
+        },
+        {
+            type: 'input',
+            name: 'outputDir',
+            message: 'Enter the output folder path',
+            initial: './output',
+        },
+        {
+            type: 'input',
+            name: 'completedDir',
+            message: 'Enter the completed folder path',
+            initial: './completed',
+        },
+        {
+            type: 'select',
+            name: 'outputFormat',
+            message: 'Select the output image format:',
+            initial: 'webp',
+            choices: ['webp', 'jpg', 'png']
+        },
+        {
+            type: 'input',
+            name: 'threads',
+            message: `Enter the number of CPU threads to use (1-${maxThreads}):`,
+            initial: defaultThreads.toString(), // Convert to string for consistent input type
+            validate: (value) => {
+                const threads = parseInt(value, 10);
+                if (isNaN(threads) || threads < 1 || threads > maxThreads) {
+                    return `Invalid input. Please enter a number between 1 and ${maxThreads}.`;
+                }
+                return true;
+            },
+        },
+        {
+            type: 'input',
+            name: 'maxWidth',
+            message: 'Enter the maximum image width',
+            initial: '1200',
+            validate: (value) => {
+                const width = parseInt(value, 10);
+                if (isNaN(width) || width < 50) {
+                    return 'Invalid input. Please enter a number greater than or equal to 50.';
+                }
+                return true;
+            },
+        },
+        {
+            type: 'input',
+            name: 'quality',
+            message: 'Enter the output image quality (30-100)',
+            initial: '70',
+            validate: (value) => {
+                const quality = parseInt(value, 10);
+                if (isNaN(quality) || quality < 30 || quality > 100) {
+                    return 'Invalid input. Please enter a number between 30 and 100.';
+                }
+                return true;
+            },
+        },
+    ]);
+
+    // Convert string inputs to numbers after validation
+    responses.threads = parseInt(responses.threads, 10);
+    responses.maxWidth = parseInt(responses.maxWidth, 10);
+    responses.quality = parseInt(responses.quality, 10);
+
+    return responses
 }
 
 // 主函数
 const main = async () => {
-    const inputDir = await getInput('输入文件夹路径：', './input')
-    const outputDir = await getInput('输出文件夹路径：', './output')
-    const completedDir = await getInput('完成文件夹路径：', './completed')
-    const maxWidth = parseInt(await getInput('请输入最大宽度：', '2000'))
+
+    const { inputDir, outputDir, completedDir, maxWidth, quality, threads, outputFormat } = await getParams()
 
     // 获取输入文件夹中的所有压缩包
     const zipFiles = fs.readdirSync(inputDir).filter(file => ['.zip', '.rar'].includes(path.extname(file).toLowerCase()))
 
+    console.log(`\n执行中，共 ${zipFiles.length} 文件... \n`)
     // 创建导出文件夹
     mkdir(outputDir)
     mkdir(completedDir)
-    console.log(`outputDir: ${outputDir}, completedDir: ${completedDir}`)
 
     // 每次 10 个线程同时执行
     const piscina = new Piscina({
         filename: path.resolve(__dirname, 'worker.js'),
-        maxThreads: Math.ceil(require('os').cpus().length * 0.8)
+        maxThreads: threads
     });
-    console.log(`使用线程: ${Math.ceil(require('os').cpus().length * 0.8)}, 共有：${require('os').cpus().length}`)
+
     console.time('执行完成')
     // 使用 Promise.all 来并行执行多个任务
     const tasks = zipFiles.map((zipFile) => {
@@ -46,14 +112,12 @@ const main = async () => {
         const outputPath = path.join(outputDir, filename)
         const completedPath = path.join(completedDir, filename)
 
-        return piscina.run({ inputPath, outputPath, completedPath, maxWidth });
+        return piscina.run({ inputPath, outputPath, completedPath, maxWidth, quality, outputFormat });
     });
 
     // 等待所有任务完成
     await Promise.all(tasks);
     console.timeEnd('执行完成')
-
-    readline.close()
 }
 
 main()
