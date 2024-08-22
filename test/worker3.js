@@ -5,7 +5,7 @@ async function compressImage() {
     console.log({ workerData })
     setTimeout(() => {
       parentPort.postMessage('完成!');
-    }, 10000);
+    }, Math.random() * 3000);
   } catch (error) {
     parentPort.postMessage('失败:', error);
   }

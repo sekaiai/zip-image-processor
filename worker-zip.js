@@ -1,10 +1,11 @@
 const fs = require('fs')
 const path = require('path')
-const sharp = require('sharp')
 const AdmZip = require('adm-zip')
 const unrar = require('node-unrar-js')
 const prettyHrtime = require('pretty-hrtime');
 const { mkdir } = require('./utils')
+const Piscina = require('piscina');
+
 // 解压文件到指定目录，处理不同类型的压缩文件
 const unzip = async (inputPath, tempDir) => {
   try {
@@ -26,67 +27,60 @@ const unzip = async (inputPath, tempDir) => {
   }
 }
 
-const processImage = async (imagePath, { outputFormat = 'webp', quality, maxWidth }) => {
-  const validFormats = ['jpg', 'png', 'webp'];
-  const options = { fit: 'inside', withoutEnlargement: true };
-  let format = outputFormat?.toLowerCase();
-
-  if (!validFormats.includes(format)) {
-    format = 'webp';
-  }
-
-  let buffer;
-  switch (format) {
-    case 'jpg':
-      buffer = await sharp(imagePath).resize(maxWidth, null, options).jpeg({ quality }).toBuffer();
-      break;
-    case 'png':
-      buffer = await sharp(imagePath).resize(maxWidth, null, options).png({ quality }).toBuffer();
-      break;
-    default:
-      buffer = await sharp(imagePath).resize(maxWidth, null, options).webp({ quality }).toBuffer();
-  }
-
-  const extension = `.${format}`;
-  const filename = path.parse(imagePath).name + extension;
-
-  return { buffer, filename };
-};
 
 // 处理压缩包
-const processZipFile = async ({ inputPath, outputPath, completedPath, maxWidth, quality, outputFormat }) => {
+const processZipFile = async ({ inputPath, outputPath, completedPath, maxWidth, quality, outputFormat, sharpThreads }) => {
   // 创建临时文件夹
-  const outputZip = new AdmZip()
-  const basename = path.basename(inputPath).slice(0, path.basename(inputPath).indexOf('.'))
+  const zip = new AdmZip()
+  // const basename = path.basename(inputPath).slice(0, path.basename(inputPath).indexOf('.'))
+  const basename = path.parse(inputPath).name;
   const tempDir = path.join(__dirname, 'temp', basename)
   mkdir(tempDir)
+  mkdir(path.join(tempDir, 'tmp'))
+
   await unzip(inputPath, tempDir)
-  sharp.cache(false);
 
   const timeStart = process.hrtime();
   // 处理图片
   const imageFormats = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp', '.svg'];
   const imageFiles = fs.readdirSync(tempDir).filter(file => imageFormats.includes(path.extname(file).toLowerCase()))
 
-  for (const imageFile of imageFiles) {
+  // 每次 10 个线程同时执行
+  const piscina = new Piscina({
+    filename: path.resolve(__dirname, 'worker-sharp.js'),
+    maxThreads: sharpThreads
+  });
+
+  const tasks = imageFiles.map((imageFile) => {
     const imagePath = path.join(tempDir, imageFile)
-    try {
-      // 裁剪图片
-      // const buffer = await sharp(imagePath).resize(maxWidth, null, { fit: 'inside', withoutEnlargement: true }).webp({ effort: 2, force: true, quality }).toBuffer()
-      const { buffer, filename } = await processImage(imagePath, { maxWidth, outputFormat, quality })
-      outputZip.addFile(filename, buffer)
-    } catch (error) {
-      console.error(`裁剪 ${imageFile} 失败: ${error}`)
-    }
-  }
+    const imageTmpPath = path.join(tempDir, 'tmp', imageFile)
+
+    return piscina.run({ imagePath, imageTmpPath, options: { maxWidth, outputFormat, quality } });
+  });
+
+
+  // 等待所有任务完成
+  const result = await Promise.all(tasks);
+
+  result.forEach(({ buffer, filename }) => buffer && zip.addFile(filename, buffer));
 
   // 所有文件添加完成后，写入压缩包
   if (imageFiles.length) {
-    outputZip.writeZip(outputPath)
+    zip.writeZip(outputPath)
   }
 
+
+  // 等待所有任务完成
+  // await Promise.all(tasks);
+
+  // 所有文件添加完成后，写入压缩包
+  // if (imageFiles.length) {
+  //   zip.addLocalFolder(tempDir);
+  //   await zip.writeZipPromise(outputPath);
+  // }
+
   // 删除临时文件夹
-  fs.rmSync(tempDir, { recursive: true }) // 使用 fs.rmSync 代替 fs.rmdirSync
+  // fs.rmSync(tempDir, { recursive: true }) // 使用 fs.rmSync 代替 fs.rmdirSync
 
   // 移动已完成文件
   // fs.renameSync(inputPath, completedPath)

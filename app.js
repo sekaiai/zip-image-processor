@@ -38,12 +38,25 @@ const getParams = async () => {
         },
         {
             type: 'input',
-            name: 'threads',
-            message: `Enter the number of CPU threads to use (1-${maxThreads}):`,
+            name: 'zipThreads',
+            message: `Enter the number of CPU threads to use for zip processing (1-${maxThreads})`,
+            initial: Math.round(Math.sqrt(defaultThreads)).toString(), // Convert to string for consistent input type
+            validate: (value) => {
+                const threads = parseInt(value, 10);
+                if (isNaN(threads) || threads < 1) {
+                    return `Invalid input. Please enter a number between 1 and ${maxThreads}.`;
+                }
+                return true;
+            },
+        },
+        {
+            type: 'input',
+            name: 'sharpThreads',
+            message: `Enter the number of CPU threads to use for image processing (1-${maxThreads})`,
             initial: defaultThreads.toString(), // Convert to string for consistent input type
             validate: (value) => {
                 const threads = parseInt(value, 10);
-                if (isNaN(threads) || threads < 1 || threads > maxThreads) {
+                if (isNaN(threads) || threads < 1) {
                     return `Invalid input. Please enter a number between 1 and ${maxThreads}.`;
                 }
                 return true;
@@ -78,17 +91,17 @@ const getParams = async () => {
     ]);
 
     // Convert string inputs to numbers after validation
-    responses.threads = parseInt(responses.threads, 10);
+    responses.sharpThreads = parseInt(responses.sharpThreads, 10);
+    responses.zipThreads = parseInt(responses.zipThreads, 10);
     responses.maxWidth = parseInt(responses.maxWidth, 10);
     responses.quality = parseInt(responses.quality, 10);
-
     return responses
 }
 
 // 主函数
 const main = async () => {
 
-    const { inputDir, outputDir, completedDir, maxWidth, quality, threads, outputFormat } = await getParams()
+    const { inputDir, outputDir, completedDir, maxWidth, quality, zipThreads, sharpThreads, outputFormat } = await getParams()
 
     // 获取输入文件夹中的所有压缩包
     const zipFiles = fs.readdirSync(inputDir).filter(file => ['.zip', '.rar'].includes(path.extname(file).toLowerCase()))
@@ -100,8 +113,8 @@ const main = async () => {
 
     // 每次 10 个线程同时执行
     const piscina = new Piscina({
-        filename: path.resolve(__dirname, 'worker.js'),
-        maxThreads: threads
+        filename: path.resolve(__dirname, 'worker-zip.js'),
+        maxThreads: zipThreads
     });
 
     console.time('执行完成')
@@ -112,7 +125,7 @@ const main = async () => {
         const outputPath = path.join(outputDir, filename)
         const completedPath = path.join(completedDir, filename)
 
-        return piscina.run({ inputPath, outputPath, completedPath, maxWidth, quality, outputFormat });
+        return piscina.run({ inputPath, outputPath, completedPath, maxWidth, quality, outputFormat, sharpThreads });
     });
 
     // 等待所有任务完成

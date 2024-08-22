@@ -4,7 +4,7 @@
   "description": "A Node.js application to process images in ZIP archives.",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node --max-old-space-size=30720 app.js"
   },
   "author": "Your Name",
   "license": "MIT",
