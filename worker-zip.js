@@ -27,7 +27,7 @@ const processZipFile = async ({
     // 遍历所有文件条目
     const zipEntries = zip.getEntries()
     const options = { maxWidth, outputFormat, quality }
-    await async.mapLimit(zipEntries, sharpThreads, createWorker.bind({ outzip, options }))
+    await async.eachLimit(zipEntries, sharpThreads, createWorker.bind({ outzip, options }))
 
     // 所有文件添加完成后，写入压缩包
     if (outzip.getEntryCount()) {
@@ -35,7 +35,7 @@ const processZipFile = async ({
     }
 
     // 移动已完成文件
-    // fs.renameSync(inputPath, completedPath)
+    fs.renameSync(inputPath, completedPath)
 
     const elapsed = prettyHrtime(process.hrtime(timeStart))
     const arr = [...elapsed.replace(/\s+/, '').split(''), ...Array(20).fill(' ')].slice(0, 9).join('')

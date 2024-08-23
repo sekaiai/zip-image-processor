@@ -136,7 +136,7 @@ const main = async () => {
     return { inputPath, outputPath, completedPath, maxWidth, quality, outputFormat, sharpThreads }
   })
 
-  await async.mapLimit(tasks, zipThreads, createWorker)
+  await async.eachLimit(tasks, zipThreads, createWorker)
 
   //   await Promise.all(tasks)
   // 等待所有任务完成
