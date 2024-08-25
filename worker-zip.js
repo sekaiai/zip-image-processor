@@ -1,3 +1,4 @@
+import fs from 'fs'
 import path from 'path'
 import AdmZip from 'adm-zip'
 import prettyHrtime from 'pretty-hrtime'
@@ -17,6 +18,7 @@ const processZipFile = async ({
   try {
     // 创建临时文件夹
     const zip = new AdmZip(inputPath)
+
     const outzip = new AdmZip()
 
     const basename = path.parse(inputPath).name
@@ -33,19 +35,22 @@ const processZipFile = async ({
       return acc
     }, [])
 
+    if (!zipEntries.length) {
+      return
+    }
+
     await async.eachLimit(zipEntries, sharpThreads, createWorker.bind({ outzip }))
 
     // 所有文件添加完成后，写入压缩包
-    if (outzip.getEntryCount()) {
-      await outzip.writeZipPromise(outputPath)
+    await outzip.writeZipPromise(outputPath)
 
-      // 移动已完成文件
-      // fs.renameSync(inputPath, completedPath)
-    }
+    // 移动已完成文件
+    fs.renameSync(inputPath, completedPath)
 
     const elapsed = prettyHrtime(process.hrtime(timeStart))
-    const arr = [...elapsed.replace(/\s+/, '').split(''), ...Array(20).fill(' ')].slice(0, 9).join('')
-    console.log(`${arr}${basename}`)
+    const arr = [...elapsed.replace(/\s+/, '').split(''), ...Array(10).fill(' ')].join('').slice(0, 12)
+    const total = [`${zipEntries.length}p`, ...Array(10).fill(' ')].join('').slice(0, 9)
+    console.log(`${arr}${total}${basename}`)
   } catch (error) {
     console.log('Error:', error.message, inputPath)
   }
