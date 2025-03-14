@@ -128,10 +128,9 @@ const main = async () => {
   console.time('执行完成')
   // 使用 Promise.all 来并行执行多个任务
   const tasks = zipFiles.map(zipFile => {
-    const outputFilename = zipFile.replace('.rar', '.zip')
     const inputPath = path.join(inputDir, zipFile)
-    const outputPath = path.join(outputDir, outputFilename)
-    const completedPath = path.join(completedDir, outputFilename)
+    const outputPath = path.join(outputDir, zipFile.replace('.rar', '.zip'))
+    const completedPath = path.join(completedDir, zipFile)
 
     return { inputPath, outputPath, completedPath, maxWidth, quality, outputFormat, sharpThreads }
   })
