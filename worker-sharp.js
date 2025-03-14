@@ -6,28 +6,26 @@ sharp.cache(false)
 
 const processImage = async (file, { filename, outputFormat = 'webp', quality, maxWidth }) => {
   const validFormats = ['jpg', 'png', 'webp']
-  const options = { fit: 'inside', withoutEnlargement: true }
-  let format = outputFormat?.toLowerCase()
+  let extension = outputFormat?.toLowerCase()
 
-  if (!validFormats.includes(format)) {
-    format = 'webp'
+  if (!validFormats.includes(extension)) {
+    extension = 'webp'
   }
 
-  const extension = `.${format}`
-  const saveName = path.parse(filename).name + extension
-  const transformer = sharp(file).resize(maxWidth, null, options)
+  const normalizedFormat = extension === 'jpg' ? 'jpeg' : extension
+  const saveName = path.parse(filename).name + `.${extension}`
 
-  let buffer
-  switch (format) {
-    case 'jpg':
-      buffer = await transformer.jpeg({ quality }).toBuffer()
-      break
-    case 'png':
-      buffer = await transformer.png({ quality }).toBuffer()
-      break
-    default:
-      buffer = await transformer.webp({ quality }).toBuffer()
+  // 格式特定参数处理
+  const formatOptions = {}
+  if (normalizedFormat === 'png') {
+    // 将质量参数转换为压缩等级 (0-9)
+    formatOptions.compressionLevel = Math.round((quality / 100) * 9)
+  } else {
+    formatOptions.quality = quality
   }
+
+  const options = { width: maxWidth, fit: 'inside', withoutEnlargement: true }
+  const buffer = await sharp(file).resize(options).toFormat(normalizedFormat, formatOptions).toBuffer()
 
   return { buffer, filename: saveName }
 }
