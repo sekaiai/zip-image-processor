@@ -16,15 +16,19 @@ const processImage = async (file, { filename, outputFormat = 'webp', quality, ma
   const saveName = path.parse(filename).name + `.${extension}`
 
   // 格式特定参数处理
+  const options = { width: maxWidth, fit: 'inside', withoutEnlargement: true }
   const formatOptions = {}
   if (normalizedFormat === 'png') {
     // 将质量参数转换为压缩等级 (0-9)
     formatOptions.compressionLevel = Math.round((quality / 100) * 9)
   } else {
     formatOptions.quality = quality
+    if(normalizedFormat === 'webp') {
+      options.width > 16383 && (options.width = 16383)
+      options.height = 16383
+    }
   }
 
-  const options = { width: maxWidth, fit: 'inside', withoutEnlargement: true }
   const buffer = await sharp(file).resize(options).toFormat(normalizedFormat, formatOptions).toBuffer()
 
   return { buffer, filename: saveName }
