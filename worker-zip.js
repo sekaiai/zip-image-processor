@@ -124,11 +124,13 @@ async function createWorker(workerData) {
   return new Promise(resolve => {
     const worker = new Worker('./worker-sharp.js', { workerData })
     worker.on('message', message => {
-      this.zipfile.addBuffer(Buffer.from(message.buffer), message.filename)
+      if(message.buffer){
+        this.zipfile.addBuffer(Buffer.from(message.buffer), message.filename)
+      }
       resolve()
     })
     worker.on('error', err => {
-      console.error('Worker error:', err)
+      console.error('sharp Worker error:', err)
       resolve()
     })
   })
