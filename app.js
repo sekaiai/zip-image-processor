@@ -66,7 +66,7 @@ const getParams = async () => {
       type: 'input',
       name: 'maxWidth',
       message: 'Enter the maximum image width',
-      initial: '1200',
+      initial: '850',
       validate: value => {
         const width = parseInt(value, 10)
         if (isNaN(width) || width < 50) {
@@ -128,10 +128,10 @@ const main = async () => {
   console.time('执行完成')
   // 使用 Promise.all 来并行执行多个任务
   const tasks = zipFiles.map(zipFile => {
-    const filename = zipFile.replace('rar', 'zip')
+    const outputFilename = zipFile.replace('.rar', '.zip')
     const inputPath = path.join(inputDir, zipFile)
-    const outputPath = path.join(outputDir, filename)
-    const completedPath = path.join(completedDir, filename)
+    const outputPath = path.join(outputDir, outputFilename)
+    const completedPath = path.join(completedDir, outputFilename)
 
     return { inputPath, outputPath, completedPath, maxWidth, quality, outputFormat, sharpThreads }
   })
